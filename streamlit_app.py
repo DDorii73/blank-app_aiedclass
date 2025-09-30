@@ -47,14 +47,9 @@ st.video("https://www.w3schools.com/html/mov_bbb.mp4")  # 비디오 표시
 st.header("7. 기타")
 st.progress(70)  # 진행 바
 with st.spinner("로딩 중..."):
+
     st.write("잠시만 기다려주세요...")  # 스피너
 st.balloons()  # 풍선 애니메이션
 # st.toast("이것은 토스트 메시지입니다.")  # 토스트 메시지 (Streamlit 1.22+)
 
 # 각 요소별로 주석(각주)을 달아 설명을 추가했습니다.
-import streamlit as st
-
-st.title("🎈 My new app")
-import streamlit as st
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
