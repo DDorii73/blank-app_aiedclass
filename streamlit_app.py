@@ -1,55 +1,66 @@
 import streamlit as st
+
+import streamlit as st
 import pandas as pd
-import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-st.title("Streamlit 주요 요소 예시")  # 페이지 제목
+st.title("성적 데이터 시각화 브라우저")
+st.write("CSV 파일을 업로드하고 다양한 그래프를 그릴 수 있습니다.")
 
-st.header("1. 텍스트 관련 요소")
-st.subheader("1-1. 일반 텍스트")
-st.write("이것은 일반 텍스트입니다.")  # 일반 텍스트
-st.markdown("**마크다운** _지원_ :star:")  # 마크다운 지원
-st.code('print("Hello, Streamlit!")', language='python')  # 코드 블록
-st.latex(r'\\int_0^1 x^2 dx')  # LaTeX 수식
+# 1. CSV 파일 업로드
+uploaded_file = st.file_uploader("성적 데이터 CSV 파일을 업로드하세요", type=["csv"])
+df = None
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.success("데이터 업로드 완료!")
+    st.dataframe(df)
+else:
+    st.info("CSV 파일을 업로드하면 시각화 옵션이 활성화됩니다.")
 
-st.header("2. 입력 위젯")
-name = st.text_input("이름을 입력하세요")  # 텍스트 입력
-age = st.number_input("나이", min_value=0, max_value=120, value=25)  # 숫자 입력
-agree = st.checkbox("동의합니다")  # 체크박스
-color = st.radio("색상을 선택하세요", ["빨강", "파랑", "초록"])  # 라디오 버튼
-hobby = st.selectbox("취미를 선택하세요", ["독서", "운동", "게임"])  # 셀렉트박스
-hobbies = st.multiselect("복수 취미 선택", ["독서", "운동", "게임", "음악"])  # 멀티셀렉트
-level = st.slider("만족도(0~10)", 0, 10, 5)  # 슬라이더
-st.date_input("날짜 선택")  # 날짜 입력
-st.time_input("시간 선택")  # 시간 입력
-st.file_uploader("파일 업로드")  # 파일 업로더
-st.text_area("자기소개를 입력하세요")  # 텍스트 에어리어
+# 2. 시각화 옵션
+if df is not None:
+    st.header("시각화 옵션")
+    chart_type = st.radio(
+        "원하는 그래프를 선택하세요",
+        ("히스토그램", "막대그래프", "산점도", "상자그림")
+    )
 
-st.header("3. 버튼 및 상호작용")
-if st.button("클릭하세요"):  # 버튼
-    st.success("버튼이 클릭되었습니다!")
-
-st.header("4. 데이터 표시")
-df = pd.DataFrame(np.random.randn(5, 3), columns=['A', 'B', 'C'])
-st.dataframe(df)  # 데이터프레임 표시
-st.table(df.head(3))  # 테이블 표시
-st.json({"name": name, "age": age, "agree": agree})  # JSON 표시
-
-st.header("5. 차트 및 시각화")
-st.line_chart(df)  # 선 그래프
-st.bar_chart(df)  # 막대 그래프
-st.area_chart(df)  # 영역 그래프
-
-st.header("6. 미디어")
-st.image("https://placekitten.com/200/300", caption="고양이 이미지")  # 이미지 표시
-st.audio(np.random.randn(44100), sample_rate=44100)  # 오디오 표시 (랜덤)
-st.video("https://www.w3schools.com/html/mov_bbb.mp4")  # 비디오 표시
-
-st.header("7. 기타")
-st.progress(70)  # 진행 바
-with st.spinner("로딩 중..."):
-
-    st.write("잠시만 기다려주세요...")  # 스피너
-st.balloons()  # 풍선 애니메이션
-# st.toast("이것은 토스트 메시지입니다.")  # 토스트 메시지 (Streamlit 1.22+)
-
-# 각 요소별로 주석(각주)을 달아 설명을 추가했습니다.
+    # 3. 변수 선택 및 맞춤형 그래프
+    if chart_type == "히스토그램":
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        col = st.selectbox("히스토그램을 그릴 변수 선택", num_cols)
+        if col:
+            fig, ax = plt.subplots()
+            sns.histplot(df[col], kde=True, ax=ax)
+            ax.set_title(f"{col}의 히스토그램")
+            st.pyplot(fig)
+    elif chart_type == "막대그래프":
+        cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        cat_col = st.selectbox("범주형(막대) 변수 선택", cat_cols)
+        num_col = st.selectbox("수치형(막대) 변수 선택", num_cols)
+        if cat_col and num_col:
+            fig, ax = plt.subplots()
+            sns.barplot(x=cat_col, y=num_col, data=df, ax=ax)
+            ax.set_title(f"{cat_col}별 {num_col} 막대그래프")
+            st.pyplot(fig)
+    elif chart_type == "산점도":
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        x_col = st.selectbox("X축 변수 선택", num_cols, key="scatter_x")
+        y_col = st.selectbox("Y축 변수 선택", num_cols, key="scatter_y")
+        if x_col and y_col:
+            fig, ax = plt.subplots()
+            sns.scatterplot(x=df[x_col], y=df[y_col], ax=ax)
+            ax.set_title(f"{x_col} vs {y_col} 산점도")
+            st.pyplot(fig)
+    elif chart_type == "상자그림":
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+        cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+        num_col = st.selectbox("수치형(상자) 변수 선택", num_cols, key="box_num")
+        cat_col = st.selectbox("범주형(상자) 변수 선택", cat_cols, key="box_cat")
+        if num_col and cat_col:
+            fig, ax = plt.subplots()
+            sns.boxplot(x=cat_col, y=num_col, data=df, ax=ax)
+            ax.set_title(f"{cat_col}별 {num_col} 상자그림")
+            st.pyplot(fig)
